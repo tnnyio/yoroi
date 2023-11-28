@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package services.greet.v1;
+
+option go_package = "./src/proto";
+
+service GreetService {
+  rpc TestA (TestARequest) returns (TestAResponse) {}
+  rpc TestB (TestBRequest) returns (TestBResponse) {}
+}
+
+message TestARequest {
+  string a = 1;
+  int64 b = 2;
+}
+
+message TestBRequest {
+  bytes a = 1;
+}
+
+message TestAResponse {
+  string v = 1;
+}
+
+message TestBResponse {
+  bool v = 1;
+}
