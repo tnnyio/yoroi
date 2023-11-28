@@ -18,6 +18,7 @@ package main
 import (
 	"log"
 	"net"
+	"os"
 
 	logYoroi "github.com/tnnyio/log"
 	"github.com/tnnyio/yoroi/example/src/proto"
@@ -34,7 +35,8 @@ func main() {
 
 	sc, err := net.Listen("tcp", hostPort)
 	if err != nil {
-		logger.Log("unable to listen: %+v", err)
+		logger.Log("Error", err)
+		os.Exit(1)
 	}
 	defer server.GracefulStop()
 
