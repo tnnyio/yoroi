@@ -16,8 +16,8 @@ type requestIDKeyType struct{}
 var requestIDKey requestIDKeyType
 
 // Server wraps an endpoint and implements http.Handler.
-type Server[I, O interface{}] struct {
-	ecm          EndpointCodecMap[I, O]
+type Server struct {
+	ecm          EndpointCodecMap
 	before       []httpTransport.RequestFunc
 	beforeCodec  []RequestFunc
 	after        []httpTransport.ServerResponseFunc
@@ -27,11 +27,11 @@ type Server[I, O interface{}] struct {
 }
 
 // NewServer constructs a new server, which implements http.Server.
-func NewServer[I, O interface{}](
-	ecm EndpointCodecMap[I, O],
-	options ...ServerOption[I, O],
-) *Server[I, O] {
-	s := &Server[I, O]{
+func NewServer(
+	ecm EndpointCodecMap,
+	options ...ServerOption,
+) *Server {
+	s := &Server{
 		ecm:          ecm,
 		errorEncoder: DefaultErrorEncoder,
 		logger:       log.NewNopLogger(),
@@ -43,34 +43,34 @@ func NewServer[I, O interface{}](
 }
 
 // ServerOption sets an optional parameter for servers.
-type ServerOption[I, O interface{}] func(*Server[I, O])
+type ServerOption func(*Server)
 
 // ServerBefore functions are executed on the HTTP request object before the
 // request is decoded.
-func ServerBefore[I, O interface{}](before ...httpTransport.RequestFunc) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.before = append(s.before, before...) }
+func ServerBefore(before ...httpTransport.RequestFunc) ServerOption {
+	return func(s *Server) { s.before = append(s.before, before...) }
 }
 
 // ServerBeforeCodec functions are executed after the JSON request body has been
 // decoded, but before the method's decoder is called. This provides an opportunity
 // for middleware to inspect the contents of the rpc request before being passed
 // to the codec.
-func ServerBeforeCodec[I, O interface{}](beforeCodec ...RequestFunc) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.beforeCodec = append(s.beforeCodec, beforeCodec...) }
+func ServerBeforeCodec(beforeCodec ...RequestFunc) ServerOption {
+	return func(s *Server) { s.beforeCodec = append(s.beforeCodec, beforeCodec...) }
 }
 
 // ServerAfter functions are executed on the HTTP response writer after the
 // endpoint is invoked, but before anything is written to the client.
-func ServerAfter[I, O interface{}](after ...httpTransport.ServerResponseFunc) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.after = append(s.after, after...) }
+func ServerAfter(after ...httpTransport.ServerResponseFunc) ServerOption {
+	return func(s *Server) { s.after = append(s.after, after...) }
 }
 
 // ServerErrorEncoder is used to encode errors to the http.ResponseWriter
 // whenever they're encountered in the processing of a request. Clients can
 // use this to provide custom error formatting and response codes. By default,
 // errors will be written with the DefaultErrorEncoder.
-func ServerErrorEncoder[I, O interface{}](ee httpTransport.ErrorEncoder) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.errorEncoder = ee }
+func ServerErrorEncoder(ee httpTransport.ErrorEncoder) ServerOption {
+	return func(s *Server) { s.errorEncoder = ee }
 }
 
 // ServerErrorLogger is used to log non-terminal errors. By default, no errors
@@ -78,18 +78,18 @@ func ServerErrorEncoder[I, O interface{}](ee httpTransport.ErrorEncoder) ServerO
 // of error handling, including logging in more detail, should be performed in a
 // custom ServerErrorEncoder or ServerFinalizer, both of which have access to
 // the context.
-func ServerErrorLogger[I, O interface{}](logger log.Logger) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.logger = logger }
+func ServerErrorLogger(logger log.Logger) ServerOption {
+	return func(s *Server) { s.logger = logger }
 }
 
 // ServerFinalizer is executed at the end of every HTTP request.
 // By default, no finalizer is registered.
-func ServerFinalizer[I, O interface{}](f httpTransport.ServerFinalizerFunc) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.finalizer = f }
+func ServerFinalizer(f httpTransport.ServerFinalizerFunc) ServerOption {
+	return func(s *Server) { s.finalizer = f }
 }
 
 // ServeHTTP implements http.Handler.
-func (s Server[I, O]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -124,10 +124,7 @@ func (s Server[I, O]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, f := range s.beforeCodec {
 		ctx = f(ctx, r, req)
 	}
-
-	// Get the endpoint and codecs from the map using the method
-	// defined in the JSON  object
-	ecm, ok := s.ecm[req.Method]
+	ec, ok := s.ecm[req.Method]
 	if !ok {
 		err := methodNotFoundError(fmt.Sprintf("Method %s was not found.", req.Method))
 		s.logger.Log("err", err)
@@ -136,7 +133,7 @@ func (s Server[I, O]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode the JSON "params"
-	reqParams, err := ecm.Decode(ctx, req.Params)
+	reqParams, err := ec.Decode(ctx, req.Params)
 	if err != nil {
 		s.logger.Log("err", err)
 		s.errorEncoder(ctx, err, w)
@@ -144,7 +141,7 @@ func (s Server[I, O]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the Endpoint with the params
-	response, err := ecm.Endpoint(ctx, reqParams)
+	response, err := ec.Endpoint(ctx, reqParams)
 	if err != nil {
 		s.logger.Log("err", err)
 		s.errorEncoder(ctx, err, w)
@@ -161,7 +158,7 @@ func (s Server[I, O]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Encode the response from the Endpoint
-	resParams, err := ecm.Encode(ctx, response)
+	resParams, err := ec.Encode(ctx, response)
 	if err != nil {
 		s.logger.Log("err", err)
 		s.errorEncoder(ctx, err, w)

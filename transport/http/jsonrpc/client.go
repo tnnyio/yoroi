@@ -24,7 +24,7 @@ type Client[I, O interface{}] struct {
 	// JSON RPC method name.
 	method string
 
-	enc            EncodeRequestFunc[I]
+	enc            EncodeRequestFunc
 	dec            DecodeResponseFunc[O]
 	before         []httpTransport.RequestFunc
 	after          []httpTransport.ClientResponseFunc
@@ -50,7 +50,7 @@ func NewClient[I, O interface{}](
 		client:         http.DefaultClient,
 		method:         method,
 		tgt:            tgt,
-		enc:            DefaultRequestEncoder[I],
+		enc:            DefaultRequestEncoder,
 		dec:            DefaultResponseDecoder[O],
 		before:         []httpTransport.RequestFunc{},
 		after:          []httpTransport.ClientResponseFunc{},
@@ -64,23 +64,18 @@ func NewClient[I, O interface{}](
 }
 
 // DefaultRequestEncoder marshals the given request to JSON.
-func DefaultRequestEncoder[I interface{}](_ context.Context, req I) (json.RawMessage, error) {
+func DefaultRequestEncoder(_ context.Context, req interface{}) (json.RawMessage, error) {
 	return json.Marshal(req)
 }
 
 // DefaultResponseDecoder unmarshals the result to interface{}, or returns an
 // error, if found.
-func DefaultResponseDecoder[O interface{}](_ context.Context, res Response) (O, error) {
-	var r O
-	if res.Error != nil {
-		return r, *res.Error
+func DefaultResponseDecoder[O interface{}](_ context.Context, resp Response) (response O, err error) {
+	if resp.Error != nil {
+		return response, *resp.Error
 	}
-	// var result interface{}
-	err := json.Unmarshal(res.Result, &r)
-	if err != nil {
-		return r, err
-	}
-	return r, nil
+	err = json.Unmarshal(resp.Result, &response)
+	return response, err
 }
 
 // ClientOption sets an optional parameter for clients.
@@ -113,7 +108,7 @@ func ClientFinalizer[I, O interface{}](f httpTransport.ClientFinalizerFunc) Clie
 
 // ClientRequestEncoder sets the func used to encode the request params to JSON.
 // If not set, DefaultRequestEncoder is used.
-func ClientRequestEncoder[I, O interface{}](enc EncodeRequestFunc[I]) ClientOption[I, O] {
+func ClientRequestEncoder[I, O interface{}](enc EncodeRequestFunc) ClientOption[I, O] {
 	return func(c *Client[I, O]) { c.enc = enc }
 }
 

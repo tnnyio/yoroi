@@ -86,15 +86,15 @@ func (l *mockLogger) Log(keyvals ...interface{}) error {
 }
 
 func TestServerBadDecode(t *testing.T) {
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: endpoint.Nop,
 			Decode:   func(context.Context, json.RawMessage) (interface{}, error) { return struct{}{}, errors.New("oof") },
 			Encode:   nopEncoder,
 		},
 	}
 	logger := mockLogger{}
-	handler := jsonrpc.NewServer(ecm, jsonrpc.ServerErrorLogger[interface{}, interface{}](&logger))
+	handler := jsonrpc.NewServer(ecm, jsonrpc.ServerErrorLogger(&logger))
 	server := httptest.NewServer(handler)
 	defer server.Close()
 	resp, _ := http.Post(server.URL, "application/json", addBody())
@@ -109,8 +109,8 @@ func TestServerBadDecode(t *testing.T) {
 }
 
 func TestServerBadEndpoint(t *testing.T) {
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: func(context.Context, interface{}) (interface{}, error) { return struct{}{}, errors.New("oof") },
 			Decode:   nopDecoder,
 			Encode:   nopEncoder,
@@ -129,8 +129,8 @@ func TestServerBadEndpoint(t *testing.T) {
 }
 
 func TestServerBadEncode(t *testing.T) {
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: endpoint.Nop,
 			Decode:   nopDecoder,
 			Encode:   func(context.Context, interface{}) (json.RawMessage, error) { return []byte{}, errors.New("oof") },
@@ -156,8 +156,8 @@ func TestServerErrorEncoder(t *testing.T) {
 		}
 		return http.StatusInternalServerError
 	}
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: func(context.Context, interface{}) (interface{}, error) { return struct{}{}, errTeapot },
 			Decode:   nopDecoder,
 			Encode:   nopEncoder,
@@ -165,7 +165,7 @@ func TestServerErrorEncoder(t *testing.T) {
 	}
 	handler := jsonrpc.NewServer(
 		ecm,
-		jsonrpc.ServerErrorEncoder[interface{}, interface{}](func(_ context.Context, err error, w http.ResponseWriter) { w.WriteHeader(code(err)) }),
+		jsonrpc.ServerErrorEncoder(func(_ context.Context, err error, w http.ResponseWriter) { w.WriteHeader(code(err)) }),
 	)
 	server := httptest.NewServer(handler)
 	defer server.Close()
@@ -176,7 +176,7 @@ func TestServerErrorEncoder(t *testing.T) {
 }
 
 func TestCanRejectNonPostRequest(t *testing.T) {
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{}
+	ecm := jsonrpc.EndpointCodecMap{}
 	handler := jsonrpc.NewServer(ecm)
 	server := httptest.NewServer(handler)
 	defer server.Close()
@@ -187,7 +187,7 @@ func TestCanRejectNonPostRequest(t *testing.T) {
 }
 
 func TestCanRejectInvalidJSON(t *testing.T) {
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{}
+	ecm := jsonrpc.EndpointCodecMap{}
 	handler := jsonrpc.NewServer(ecm)
 	server := httptest.NewServer(handler)
 	defer server.Close()
@@ -201,7 +201,7 @@ func TestCanRejectInvalidJSON(t *testing.T) {
 }
 
 func TestServerUnregisteredMethod(t *testing.T) {
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{}
+	ecm := jsonrpc.EndpointCodecMap{}
 	handler := jsonrpc.NewServer(ecm)
 	server := httptest.NewServer(handler)
 	defer server.Close()
@@ -236,8 +236,8 @@ func TestServerHappyPath(t *testing.T) {
 
 func TestMultipleServerBeforeCodec(t *testing.T) {
 	var done = make(chan struct{})
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: endpoint.Nop,
 			Decode:   nopDecoder,
 			Encode:   nopEncoder,
@@ -245,12 +245,12 @@ func TestMultipleServerBeforeCodec(t *testing.T) {
 	}
 	handler := jsonrpc.NewServer(
 		ecm,
-		jsonrpc.ServerBeforeCodec[interface{}, interface{}](func(ctx context.Context, r *http.Request, req jsonrpc.Request) context.Context {
+		jsonrpc.ServerBeforeCodec(func(ctx context.Context, r *http.Request, req jsonrpc.Request) context.Context {
 			ctx = context.WithValue(ctx, "one", 1)
 
 			return ctx
 		}),
-		jsonrpc.ServerBeforeCodec[interface{}, interface{}](func(ctx context.Context, r *http.Request, req jsonrpc.Request) context.Context {
+		jsonrpc.ServerBeforeCodec(func(ctx context.Context, r *http.Request, req jsonrpc.Request) context.Context {
 			if _, ok := ctx.Value("one").(int); !ok {
 				t.Error("Value was not set properly when multiple ServerBeforeCodecs are used")
 			}
@@ -272,8 +272,8 @@ func TestMultipleServerBeforeCodec(t *testing.T) {
 
 func TestMultipleServerBefore(t *testing.T) {
 	var done = make(chan struct{})
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: endpoint.Nop,
 			Decode:   nopDecoder,
 			Encode:   nopEncoder,
@@ -281,12 +281,12 @@ func TestMultipleServerBefore(t *testing.T) {
 	}
 	handler := jsonrpc.NewServer(
 		ecm,
-		jsonrpc.ServerBefore[interface{}, interface{}](func(ctx context.Context, r *http.Request) context.Context {
+		jsonrpc.ServerBefore(func(ctx context.Context, r *http.Request) context.Context {
 			ctx = context.WithValue(ctx, "one", 1)
 
 			return ctx
 		}),
-		jsonrpc.ServerBefore[interface{}, interface{}](func(ctx context.Context, r *http.Request) context.Context {
+		jsonrpc.ServerBefore(func(ctx context.Context, r *http.Request) context.Context {
 			if _, ok := ctx.Value("one").(int); !ok {
 				t.Error("Value was not set properly when multiple ServerBefores are used")
 			}
@@ -308,8 +308,8 @@ func TestMultipleServerBefore(t *testing.T) {
 
 func TestMultipleServerAfter(t *testing.T) {
 	var done = make(chan struct{})
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: endpoint.Nop,
 			Decode:   nopDecoder,
 			Encode:   nopEncoder,
@@ -317,12 +317,12 @@ func TestMultipleServerAfter(t *testing.T) {
 	}
 	handler := jsonrpc.NewServer(
 		ecm,
-		jsonrpc.ServerAfter[interface{}, interface{}](func(ctx context.Context, w http.ResponseWriter) context.Context {
+		jsonrpc.ServerAfter(func(ctx context.Context, w http.ResponseWriter) context.Context {
 			ctx = context.WithValue(ctx, "one", 1)
 
 			return ctx
 		}),
-		jsonrpc.ServerAfter[interface{}, interface{}](func(ctx context.Context, w http.ResponseWriter) context.Context {
+		jsonrpc.ServerAfter(func(ctx context.Context, w http.ResponseWriter) context.Context {
 			if _, ok := ctx.Value("one").(int); !ok {
 				t.Error("Value was not set properly when multiple ServerAfters are used")
 			}
@@ -345,8 +345,8 @@ func TestMultipleServerAfter(t *testing.T) {
 func TestCanFinalize(t *testing.T) {
 	var done = make(chan struct{})
 	var finalizerCalled bool
-	ecm := jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-		"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+	ecm := jsonrpc.EndpointCodecMap{
+		"add": jsonrpc.EndpointCodec{
 			Endpoint: endpoint.Nop,
 			Decode:   nopDecoder,
 			Encode:   nopEncoder,
@@ -354,7 +354,7 @@ func TestCanFinalize(t *testing.T) {
 	}
 	handler := jsonrpc.NewServer(
 		ecm,
-		jsonrpc.ServerFinalizer[interface{}, interface{}](func(ctx context.Context, code int, req *http.Request) {
+		jsonrpc.ServerFinalizer(func(ctx context.Context, code int, req *http.Request) {
 			finalizerCalled = true
 			close(done)
 		}),
@@ -382,8 +382,8 @@ func testServer(t *testing.T) (step func(), resp <-chan *http.Response) {
 			return struct{}{}, nil
 		}
 		response = make(chan *http.Response)
-		ecm      = jsonrpc.EndpointCodecMap[interface{}, interface{}]{
-			"add": jsonrpc.EndpointCodec[interface{}, interface{}]{
+		ecm      = jsonrpc.EndpointCodecMap{
+			"add": jsonrpc.EndpointCodec{
 				Endpoint: endpoint,
 				Decode:   nopDecoder,
 				Encode:   nopEncoder,

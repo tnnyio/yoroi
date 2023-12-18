@@ -7,7 +7,6 @@ replace github.com/armon/go-metrics v0.5.3 => github.com/hashicorp/go-metrics v0
 require (
 	github.com/VividCortex/gohistogram v1.0.0
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
-	github.com/aws/aws-sdk-go v1.49.0
 	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.0
 	github.com/go-zookeeper/zk v1.0.3
@@ -15,7 +14,6 @@ require (
 	github.com/hashicorp/consul/api v1.26.1
 	github.com/hudl/fargo v1.4.0
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
-	github.com/opentracing/opentracing-go v1.2.0
 	github.com/openzipkin/zipkin-go v0.4.2
 	github.com/performancecopilot/speed/v4 v4.0.0
 	github.com/prometheus/client_golang v1.17.0
@@ -25,7 +23,6 @@ require (
 	go.etcd.io/etcd/client/pkg/v3 v3.5.11
 	go.etcd.io/etcd/client/v2 v2.305.11
 	go.etcd.io/etcd/client/v3 v3.5.11
-	go.opencensus.io v0.24.0
 	golang.org/x/sync v0.5.0
 	golang.org/x/time v0.5.0
 )
@@ -44,13 +41,10 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
-	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/franela/goreq v0.0.0-20171204163338-bcd34c9993f8 // indirect
-	github.com/go-logr/logr v1.3.0 // indirect
-	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.6.1 // indirect
@@ -75,14 +69,6 @@ require (
 	github.com/prometheus/common v0.45.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.11 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.46.1 // indirect
-	go.opentelemetry.io/otel v1.21.0 // indirect
-	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v0.44.0 // indirect
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.21.0 // indirect
-	go.opentelemetry.io/otel/metric v1.21.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.21.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.21.0 // indirect
-	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
 	golang.org/x/mod v0.14.0 // indirect

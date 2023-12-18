@@ -160,9 +160,10 @@ func NopRequestDecoder(ctx context.Context, r *http.Request) (interface{}, error
 // a sensible default. If the response implements Headerer, the provided headers
 // will be applied to the response. If the response implements StatusCoder, the
 // provided StatusCode will be used instead of 200.
-func EncodeJSONResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+func EncodeJSONResponse[Response interface{}](_ context.Context, w http.ResponseWriter, response Response) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if headerer, ok := response.(Headerer); ok {
+	var resp interface{} = response
+	if headerer, ok := resp.(Headerer); ok {
 		for k, values := range headerer.Headers() {
 			for _, v := range values {
 				w.Header().Add(k, v)
@@ -170,7 +171,7 @@ func EncodeJSONResponse(_ context.Context, w http.ResponseWriter, response inter
 		}
 	}
 	code := http.StatusOK
-	if sc, ok := response.(StatusCoder); ok {
+	if sc, ok := resp.(StatusCoder); ok {
 		code = sc.StatusCode()
 	}
 	w.WriteHeader(code)

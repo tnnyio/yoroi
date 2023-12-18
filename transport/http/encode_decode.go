@@ -2,6 +2,8 @@ package http
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 )
 
@@ -34,3 +36,14 @@ type EncodeResponseFunc[Response interface{}] func(context.Context, http.Respons
 // endpoints. One straightforward DecodeResponseFunc could be something that
 // JSON decodes from the response body to the concrete response type.
 type DecodeResponseFunc[Response interface{}] func(context.Context, *http.Response) (response Response, err error)
+
+func DefaultDecodeJson[Request interface{}](ctx context.Context, req *http.Request) (request Request, err error) {
+	var buf []byte
+	if buf, err = io.ReadAll(req.Body); err != nil {
+		return request, err
+	}
+	if err = json.Unmarshal(buf, &request); err != nil {
+		return request, err
+	}
+	return
+}
