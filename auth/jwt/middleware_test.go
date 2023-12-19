@@ -14,7 +14,7 @@ import (
 
 type customClaims struct {
 	MyProperty string `json:"my_property"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func (c customClaims) VerifyMyProperty(p string) bool {
@@ -28,12 +28,15 @@ var (
 	method         = jwt.SigningMethodHS256
 	invalidMethod  = jwt.SigningMethodRS256
 	mapClaims      = jwt.MapClaims{"user": "go-kit"}
-	standardClaims = jwt.StandardClaims{Audience: "go-kit"}
-	myCustomClaims = customClaims{MyProperty: myProperty, StandardClaims: standardClaims}
+	standardClaims = jwt.RegisteredClaims{
+		Audience: jwt.ClaimStrings{
+			"go-kit",
+		}}
+	myCustomClaims = customClaims{MyProperty: myProperty, RegisteredClaims: standardClaims}
 	// Signed tokens generated at https://jwt.io/
 	signedKey         = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZ28ta2l0In0.14M2VmYyApdSlV_LZ88ajjwuaLeIFplB8JpyNy0A19E"
-	standardSignedKey = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJnby1raXQifQ.L5ypIJjCOOv3jJ8G5SelaHvR04UJuxmcBN5QW3m_aoY"
-	customSignedKey   = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJteV9wcm9wZXJ0eSI6InNvbWUgdmFsdWUiLCJhdWQiOiJnby1raXQifQ.s8F-IDrV4WPJUsqr7qfDi-3GRlcKR0SRnkTeUT_U-i0"
+	standardSignedKey = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiZ28ta2l0Il19.vqB-qPpEqKyEYqNsDsM7ZrWYG7ZEhJLwBXMzR0H3ajo"
+	customSignedKey   = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJteV9wcm9wZXJ0eSI6InNvbWUgdmFsdWUiLCJhdWQiOlsiZ28ta2l0Il19.Yus4v91ScNgx6_zgLJVYofo2vpZziA_vds7WPWwwgbE"
 	invalidKey        = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.e30.vKVCKto-Wn6rgz3vBdaZaCBGfCBDTXOENSo_X2Gq7qA"
 	malformedKey      = "malformed.jwt.token"
 )
