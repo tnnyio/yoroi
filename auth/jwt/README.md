@@ -12,7 +12,7 @@ will be added to the context via the `jwt.JWTClaimsContextKey`.
 
 ```go
 import (
-	stdjwt "github.com/golang-jwt/jwt/v4"
+	stdjwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/tnnyio/yoroi/auth/jwt"
 	"github.com/tnnyio/yoroi/endpoint"
@@ -34,7 +34,7 @@ the token string and add it to the context via the `jwt.JWTContextKey`.
 
 ```go
 import (
-	stdjwt "github.com/golang-jwt/jwt/v4"
+	stdjwt "github.com/golang-jwt/jwt/v5"
 
 	"github.com/tnnyio/yoroi/auth/jwt"
 	"github.com/tnnyio/yoroi/endpoint"
@@ -65,7 +65,7 @@ Example of use in a client:
 
 ```go
 import (
-	stdjwt "github.com/golang-jwt/jwt/v4"
+	stdjwt "github.com/golang-jwt/jwt/v5"
 
 	grpctransport "github.com/tnnyio/yoroi/transport/grpc"
 	"github.com/tnnyio/yoroi/auth/jwt"

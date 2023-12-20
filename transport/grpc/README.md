@@ -1,20 +1,20 @@
 # grpc
 
 [gRPC](http://www.grpc.io/) is an excellent, modern IDL and transport for
-microservices. If you're starting a greenfield project, go-kit strongly
+microservices. If you're starting a greenfield project, yoroi strongly
 recommends gRPC as your default transport.
 
 One important note is that while gRPC supports streaming requests and replies,
-go-kit does not. You can still use streams in your service, but their
-implementation will not be able to take advantage of many go-kit features like middleware.
+yoroi does not. You can still use streams in your service, but their
+implementation will not be able to take advantage of many yoroi features like middleware.
 
-Using gRPC and go-kit together is very simple.
+Using gRPC and yoroi together is very simple.
 
 First, define your service using protobuf3. This is explained
 [in gRPC documentation](http://www.grpc.io/docs/#defining-a-service).
 See
 [Examples](https://github.com/tnnyio/examples)
-for an example. Make sure the proto definition matches your service's go-kit
+for an example. Make sure the proto definition matches your service's yoroi
 (interface) definition.
 
 Next, get the protoc compiler.
@@ -45,4 +45,4 @@ definition. It's a simple conversion from one domain to another.
 
 That's it!
 The gRPC binding can be bound to a listener and serve normal gRPC requests.
-And within your service, you can use standard go-kit components and idioms.
+And within your service, you can use standard yoroi components and idioms.

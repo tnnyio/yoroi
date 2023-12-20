@@ -51,7 +51,7 @@ var (
 // signing string, signing method and the claims you would like it to contain.
 // Tokens are signed with a Key ID header (kid) which is useful for determining
 // the key to use for parsing. Particularly useful for clients.
-func NewSigner[O interface{}](kid string, key []byte, method jwt.SigningMethod, claims jwt.Claims) endpoint.Middleware[O] {
+func NewSigner[O interface{}](kid string, key interface{}, method jwt.SigningMethod, claims jwt.Claims) endpoint.Middleware[O] {
 	return func(next endpoint.Endpoint[O]) endpoint.Endpoint[O] {
 		return func(ctx context.Context, request interface{}) (response O, err error) {
 			token := jwt.NewWithClaims(method, claims)

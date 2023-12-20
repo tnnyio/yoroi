@@ -2,11 +2,14 @@ package jwt
 
 import (
 	"context"
+	"encoding/pem"
 	"sync"
 	"testing"
 	"time"
 
+	"crypto/ecdsa"
 	"crypto/subtle"
+	"crypto/x509"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/tnnyio/yoroi/endpoint"
@@ -27,10 +30,10 @@ var (
 	myProperty     = "some value"
 	method         = jwt.SigningMethodHS256
 	invalidMethod  = jwt.SigningMethodRS256
-	mapClaims      = jwt.MapClaims{"user": "go-kit"}
+	mapClaims      = jwt.MapClaims{"user": "yoroi"}
 	standardClaims = jwt.RegisteredClaims{
 		Audience: jwt.ClaimStrings{
-			"go-kit",
+			"yoroi",
 		}}
 	myCustomClaims = customClaims{MyProperty: myProperty, RegisteredClaims: standardClaims}
 	// Signed tokens generated at https://jwt.io/
@@ -58,6 +61,29 @@ func signingValidator[O interface{}](t *testing.T, signer endpoint.Endpoint[O], 
 	}
 }
 
+var es256Key = `-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgevZzL1gdAFr88hb2
+OF/2NxApJCzGCEDdfSp6VQO30hyhRANCAAQRWz+jn65BtOMvdyHKcvjBeBSDZH2r
+1RTwjmYSi9R/zpBnuQ4EiMnCqfMPWiZqB4QdbAd0E7oH50VpuZ1P087G
+-----END PRIVATE KEY-----`
+
+func es236PrivateKeyFromPem(t *testing.T, k string) *ecdsa.PrivateKey {
+	block, _ := pem.Decode([]byte(k))
+	if block == nil {
+		t.Error("block is nil")
+		return nil
+	}
+	p, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		t.Error(err)
+	}
+	key, ok := p.(*ecdsa.PrivateKey)
+	if !ok {
+		t.Error("Failed to get ecdsa key")
+	}
+	return key
+}
+
 func TestNewSigner(t *testing.T) {
 	e := func(ctx context.Context, i interface{}) (context.Context, error) { return ctx, nil }
 
@@ -69,6 +95,21 @@ func TestNewSigner(t *testing.T) {
 
 	signer = NewSigner[context.Context](kid, key, method, myCustomClaims)(e)
 	signingValidator(t, signer, customSignedKey)
+
+	{
+		// ES256
+		pKey := es236PrivateKeyFromPem(t, es256Key)
+		signer = NewSigner[context.Context](kid, pKey, jwt.SigningMethodES256, standardClaims)(e)
+		ctx, err := signer(context.Background(), struct{}{})
+		if err != nil {
+			t.Fatalf("Signer returned error: %s", err)
+		}
+
+		_, ok := ctx.Value(JWTContextKey).(string)
+		if !ok {
+			t.Fatal("Token did not exist in context")
+		}
+	}
 }
 
 func TestJWTParser(t *testing.T) {
@@ -182,7 +223,7 @@ func TestJWTParser(t *testing.T) {
 	if !ok {
 		t.Fatal("Claims were not passed into context correctly")
 	}
-	if !stdCl.VerifyAudience("go-kit", true) {
+	if !stdCl.VerifyAudience("yoroi", true) {
 		t.Fatalf("JWT jwt.StandardClaims.Audience did not match: expecting %s got %s", standardClaims.Audience, stdCl.Audience)
 	}
 
@@ -197,7 +238,7 @@ func TestJWTParser(t *testing.T) {
 	if !ok {
 		t.Fatal("Claims were not passed into context correctly")
 	}
-	if !custCl.VerifyAudience("go-kit", true) {
+	if !custCl.VerifyAudience("yoroi", true) {
 		t.Fatalf("JWT customClaims.Audience did not match: expecting %s got %s", standardClaims.Audience, custCl.Audience)
 	}
 	if !custCl.VerifyMyProperty(myProperty) {
