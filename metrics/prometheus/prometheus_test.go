@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"io"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -23,7 +24,7 @@ func TestCounter(t *testing.T) {
 
 	scrape := func() string {
 		resp, _ := http.Get(s.URL)
-		buf, _ := ioutil.ReadAll(resp.Body)
+		buf, _ := io.ReadAll(resp.Body)
 		return string(buf)
 	}
 
@@ -130,7 +131,7 @@ func TestHistogram(t *testing.T) {
 
 	scrape := func() string {
 		resp, _ := http.Get(s.URL)
-		buf, _ := ioutil.ReadAll(resp.Body)
+		buf, _ := io.ReadAll(resp.Body)
 		return string(buf)
 	}
 

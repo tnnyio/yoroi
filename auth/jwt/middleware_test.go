@@ -37,9 +37,9 @@ var (
 		}}
 	myCustomClaims = customClaims{MyProperty: myProperty, RegisteredClaims: standardClaims}
 	// Signed tokens generated at https://jwt.io/
-	signedKey         = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZ28ta2l0In0.14M2VmYyApdSlV_LZ88ajjwuaLeIFplB8JpyNy0A19E"
-	standardSignedKey = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiZ28ta2l0Il19.vqB-qPpEqKyEYqNsDsM7ZrWYG7ZEhJLwBXMzR0H3ajo"
-	customSignedKey   = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJteV9wcm9wZXJ0eSI6InNvbWUgdmFsdWUiLCJhdWQiOlsiZ28ta2l0Il19.Yus4v91ScNgx6_zgLJVYofo2vpZziA_vds7WPWwwgbE"
+	signedKey         = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoieW9yb2kifQ.GfQQ3O1yVdG_6M04LLwWU85m2BBNlFaJknVn--fvYMU"
+	standardSignedKey = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsieW9yb2kiXX0.y-vffOic-coxhF3ezAJpIdqkOKUrA3WzhU3CW2OWAa8"
+	customSignedKey   = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImtpZCIsInR5cCI6IkpXVCJ9.eyJteV9wcm9wZXJ0eSI6InNvbWUgdmFsdWUiLCJhdWQiOlsieW9yb2kiXX0.bQPQSn3f9PKlBbvduxefNq1BkRDXutQTYRkslT515n4"
 	invalidKey        = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.e30.vKVCKto-Wn6rgz3vBdaZaCBGfCBDTXOENSo_X2Gq7qA"
 	malformedKey      = "malformed.jwt.token"
 )
