@@ -10,8 +10,8 @@ import (
 	fh "github.com/valyala/fasthttp"
 )
 
-// Server wraps an endpoint and implements http.Handler.
-type Server[I, O interface{}] struct {
+// server wraps an endpoint and implements http.Handler.
+type server[I, O interface{}] struct {
 	e            endpoint.Endpoint[O]
 	dec          DecodeRequestFunc[I]
 	enc          EncodeResponseFunc[O]
@@ -30,7 +30,7 @@ func NewServer[I, O interface{}](
 	enc EncodeResponseFunc[O],
 	options ...ServerOption[I, O],
 ) fh.RequestHandler {
-	s := &Server[I, O]{
+	s := &server[I, O]{
 		e:            e,
 		dec:          dec,
 		enc:          enc,
@@ -82,18 +82,18 @@ func NewServer[I, O interface{}](
 }
 
 // ServerOption sets an optional parameter for servers.
-type ServerOption[I, O interface{}] func(*Server[I, O])
+type ServerOption[I, O interface{}] func(*server[I, O])
 
 // ServerBefore functions are executed on the HTTP request object before the
 // request is decoded.
 func ServerBefore[I, O interface{}](before ...RequestFunc) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.before = append(s.before, before...) }
+	return func(s *server[I, O]) { s.before = append(s.before, before...) }
 }
 
 // ServerAfter functions are executed on the HTTP response writer after the
 // endpoint is invoked, but before anything is written to the client.
 func ServerAfter[I, O interface{}](after ...ServerResponseFunc) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.after = append(s.after, after...) }
+	return func(s *server[I, O]) { s.after = append(s.after, after...) }
 }
 
 // ServerErrorEncoder is used to encode errors to the http.ResponseWriter
@@ -101,7 +101,7 @@ func ServerAfter[I, O interface{}](after ...ServerResponseFunc) ServerOption[I, 
 // use this to provide custom error formatting and response codes. By default,
 // errors will be written with the DefaultErrorEncoder.
 func ServerErrorEncoder[I, O interface{}](ee ErrorEncoder) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.errorEncoder = ee }
+	return func(s *server[I, O]) { s.errorEncoder = ee }
 }
 
 // ServerErrorLogger is used to log non-terminal errors. By default, no errors
@@ -111,7 +111,7 @@ func ServerErrorEncoder[I, O interface{}](ee ErrorEncoder) ServerOption[I, O] {
 // the context.
 // Deprecated: Use ServerErrorHandler instead.
 func ServerErrorLogger[I, O interface{}](logger log.Logger) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.errorHandler = transport.NewLogErrorHandler(logger) }
+	return func(s *server[I, O]) { s.errorHandler = transport.NewLogErrorHandler(logger) }
 }
 
 // ServerErrorHandler is used to handle non-terminal errors. By default, non-terminal errors
@@ -120,13 +120,13 @@ func ServerErrorLogger[I, O interface{}](logger log.Logger) ServerOption[I, O] {
 // custom ServerErrorEncoder or ServerFinalizer, both of which have access to
 // the context.
 func ServerErrorHandler[I, O interface{}](errorHandler transport.ErrorHandler) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.errorHandler = errorHandler }
+	return func(s *server[I, O]) { s.errorHandler = errorHandler }
 }
 
 // ServerFinalizer is executed at the end of every HTTP request.
 // By default, no finalizer is registered.
 func ServerFinalizer[I, O interface{}](f ...ServerFinalizerFunc) ServerOption[I, O] {
-	return func(s *Server[I, O]) { s.finalizer = append(s.finalizer, f...) }
+	return func(s *server[I, O]) { s.finalizer = append(s.finalizer, f...) }
 }
 
 // ErrorEncoder is responsible for encoding an error to the ResponseWriter.
