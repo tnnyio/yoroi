@@ -8,8 +8,10 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/tnnyio/yoroi/transport/fasthttp"
 	"github.com/tnnyio/yoroi/transport/grpc"
 	"github.com/tnnyio/yoroi/transport/http"
+	fh "github.com/valyala/fasthttp"
 )
 
 const (
@@ -39,6 +41,33 @@ func ContextToHTTP() http.RequestFunc {
 			r.Header.Add("Authorization", generateAuthHeaderFromToken(token))
 		}
 		return ctx
+	}
+}
+
+// FastToContext moves a JWT from request header to context. Particularly
+// useful for servers.
+func FastToContext() fasthttp.RequestFunc {
+	return func(ctx *fh.RequestCtx) {
+		header := stdhttp.Header{}
+		ctx.Request.Header.VisitAll(func(key, value []byte) {
+			header[string(key)] = []string{string(value)}
+		})
+		token, ok := extractTokenFromAuthHeader(header.Get("Authorization"))
+		if ok {
+			ctx.SetUserValue(JWTContextKey, token)
+		}
+
+	}
+}
+
+// ContextToFast moves a JWT from context to request header. Particularly
+// useful for clients.
+func ContextToFast() fasthttp.RequestFunc {
+	return func(ctx *fh.RequestCtx) {
+		token, ok := ctx.UserValue(JWTContextKey).(string)
+		if ok {
+			ctx.Request.Header.Add("Authorization", generateAuthHeaderFromToken(token))
+		}
 	}
 }
 
