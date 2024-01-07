@@ -1,5 +1,7 @@
 package transport
 
+import "net/http"
+
 type (
 	invalidRequest string
 )
@@ -14,6 +16,10 @@ const (
 
 func (invalidRequest) ErrorCode() int {
 	return InvalidRequestCode
+}
+
+func (invalidRequest) StatusCode() int {
+	return http.StatusBadRequest
 }
 
 func (e invalidRequest) Error() string {
