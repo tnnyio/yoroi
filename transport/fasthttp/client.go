@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/valyala/fasthttp"
 )
@@ -19,12 +20,21 @@ type client[I, O interface{}] struct {
 	bufferedStream bool
 }
 
+type URI struct {
+	Host string
+	Path string
+}
+
 // NewClient constructs a usable Client for a single remote method.
-func NewClient[I, O interface{}](method, url string, enc EncodeRequestFunc[I], dec DecodeResponseFunc[O], options ...ClientOption[I, O]) *client[I, O] {
+func NewClient[I, O interface{}](method string, url URI, enc EncodeRequestFunc[I], dec DecodeResponseFunc[O], options ...ClientOption[I, O]) *client[I, O] {
 	c := &client[I, O]{
 		do: fasthttp.Do,
 		req: func(rc *fasthttp.Request, i I) (*fasthttp.Request, error) {
-			rc.URI().SetHost(url)
+			if strings.Contains(url.Host, "//") {
+				url.Host = strings.Split(url.Host, "//")[1]
+			}
+			rc.URI().SetHost(url.Host)
+			rc.URI().SetPath(url.Path)
 			rc.Header.SetMethod(method)
 			err := enc(rc, i)
 			if err != nil {
@@ -54,7 +64,7 @@ func (c *client[I, O]) Call(ctx context.Context, i I) (o O, err error) {
 		}
 		req.SetBodyStream(stream, -1)
 	}
-	fmt.Println(string(req.URI().Host()))
+
 	resp := fasthttp.AcquireResponse()
 	if err = c.do(req, resp); err != nil {
 		return
